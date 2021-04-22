@@ -29,7 +29,7 @@ class PersistentMessageService(val messageRepository: MessageRepository) : Messa
     override fun post(message: MessageVM) {
         messageRepository.save(
             with(message) {
-                Message(content, ContentType.PLLAIN, sent, user.name, user.avatarImageLink.toString())
+                Message(content, ContentType.PLAIN, sent, user.name, user.avatarImageLink.toString())
             }
         )
     }
