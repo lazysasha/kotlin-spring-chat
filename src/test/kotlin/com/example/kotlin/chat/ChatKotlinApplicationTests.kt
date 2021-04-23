@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.boot.test.web.client.postForEntity
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpMethod
 import org.springframework.http.RequestEntity
@@ -91,7 +92,7 @@ class ChatKotlinApplicationTests {
             object : ParameterizedTypeReference<List<MessageVM>>() {}
         ).body
 
-        if(!withLastMessageId) {
+        if (!withLastMessageId) {
             assertThat(messages?.map { with(it) { copy(id = null, sent = sent.truncatedTo(MILLIS)) } })
                 .first()
                 .isEqualTo(
@@ -115,5 +116,32 @@ class ChatKotlinApplicationTests {
                     now.truncatedTo(MILLIS)
                 )
             )
+    }
+
+    @Test
+    fun `Test that messages posted to the API are stored in DB`() {
+        client.postForEntity<Any>(
+            URI("/api/v1/messages"),
+            MessageVM(
+                "`HelloWorld`",
+                UserVM("test", URL("http://test.com")),
+                now.plusSeconds(1)
+            )
+        )
+
+        messageRepository.findAll()
+            .first { it.content.contains("HelloWorld") }
+            .apply {
+                assertThat(this.copy(id = null, sent = sent.truncatedTo(MILLIS)))
+                    .isEqualTo(
+                        Message(
+                            "`HelloWorld`",
+                            ContentType.PLAIN,
+                            now.plusSeconds(1).truncatedTo(MILLIS),
+                            "test",
+                            "http://test.com"
+                        )
+                    )
+            }
     }
 }
