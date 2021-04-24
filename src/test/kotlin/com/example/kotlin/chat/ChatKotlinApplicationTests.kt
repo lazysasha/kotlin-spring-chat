@@ -59,14 +59,14 @@ class ChatKotlinApplicationTests {
                 ),
                 Message(
                     "**testMessage2**",
-                    ContentType.PLAIN,
+                    ContentType.MARKDOWN,
                     secondBeforeNow,
                     "test1",
                     "http://test.com"
                 ),
                 Message(
-                    "**testMessage3**",
-                    ContentType.PLAIN,
+                    "`testMessage3`",
+                    ContentType.MARKDOWN,
                     now,
                     "test2",
                     "http://test.com"
@@ -103,15 +103,15 @@ class ChatKotlinApplicationTests {
                     )
                 )
         }
-        assertThat(messages?.map { with(it) { copy(id = null, sent = sent.truncatedTo(MILLIS)) } })
+        assertThat(messages?.map { it.prepareForTesting() })
             .containsSubsequence(
                 MessageVM(
-                    "**testMessage2**",
+                    "<body><p><strong>testMessage2</strong></p></body>",
                     UserVM("test1", URL("http://test.com")),
                     now.minusSeconds(1).truncatedTo(MILLIS)
                 ),
                 MessageVM(
-                    "**testMessage3**",
+                    "<body><p><code>testMessage3</code></p></body>",
                     UserVM("test2", URL("http://test.com")),
                     now.truncatedTo(MILLIS)
                 )
@@ -132,11 +132,11 @@ class ChatKotlinApplicationTests {
         messageRepository.findAll()
             .first { it.content.contains("HelloWorld") }
             .apply {
-                assertThat(this.copy(id = null, sent = sent.truncatedTo(MILLIS)))
+                assertThat(this.prepareForTesting())
                     .isEqualTo(
                         Message(
                             "`HelloWorld`",
-                            ContentType.PLAIN,
+                            ContentType.MARKDOWN,
                             now.plusSeconds(1).truncatedTo(MILLIS),
                             "test",
                             "http://test.com"
